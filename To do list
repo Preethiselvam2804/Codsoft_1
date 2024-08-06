@@ -1,0 +1,72 @@
+package com.example.todolistapp;
+
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import java.util.ArrayList;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity {
+
+    private EditText taskEditText;
+    private Button addTaskButton;
+    private RecyclerView tasksRecyclerView;
+    private TaskAdapter taskAdapter;
+    private List<Task> taskList = new ArrayList<>();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        taskEditText = findViewById(R.id.taskEditText);
+        addTaskButton = findViewById(R.id.addTaskButton);
+        tasksRecyclerView = findViewById(R.id.tasksRecyclerView);
+
+        taskAdapter = new TaskAdapter(taskList, new TaskAdapter.OnTaskActionListener() {
+            @Override
+            public void onEditClick(int position) {
+                Task task = taskList.get(position);
+                taskEditText.setText(task.getDescription());
+                addTaskButton.setText("Update Task");
+                addTaskButton.setOnClickListener(v -> updateTask(position));
+            }
+
+            @Override
+            public void onDeleteClick(int position) {
+                taskList.remove(position);
+                taskAdapter.notifyItemRemoved(position);
+            }
+        });
+
+        tasksRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        tasksRecyclerView.setAdapter(taskAdapter);
+
+        addTaskButton.setOnClickListener(v -> addTask());
+    }
+
+    private void addTask() {
+        String taskDescription = taskEditText.getText().toString();
+        if (!taskDescription.isEmpty()) {
+            taskList.add(new Task(taskDescription));
+            taskAdapter.notifyItemInserted(taskList.size() - 1);
+            taskEditText.setText("");
+        }
+    }
+
+    private void updateTask(int position) {
+        String newDescription = taskEditText.getText().toString();
+        if (!newDescription.isEmpty()) {
+            Task task = taskList.get(position);
+            task.setDescription(newDescription);
+            taskAdapter.notifyItemChanged(position);
+            addTaskButton.setText("Add Task");
+            addTaskButton.setOnClickListener(v -> addTask());
+            taskEditText.setText("");
+        }
+    }
+}
